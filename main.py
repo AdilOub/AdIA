@@ -1,5 +1,5 @@
+from venv import create
 import matplotlib.pyplot as plt
-import numpy as np
 from matrice import *
 import math
 
@@ -13,8 +13,8 @@ class Reseau:
         self.COUCHE_TOTAL = couchesIntermediaire + 2
 
         # Training data
-        self.X = []
-        self.Y = []
+        self.TrainingX = []
+        self.TrainingY = []
 
         #Guessing data
         self.ValueToGuess = None
@@ -22,24 +22,33 @@ class Reseau:
         #Listes des matrices
         self.poids = []
         self.biais = []
+        self.layer = []
 
-        self.poids.append(np.random.randn(self.nbParCoucheInter, self.activations)) #L'erreur est ici dans la formes des matrices
-        self.biais.append(np.zeros((self.activations, 1)))
+        #Initialisation des matrices couches
+        self.layer.append(createMatriceOfK(activations, 1, 0))
         for i in range(1, self.COUCHE_TOTAL-1):
-            self.poids.append(np.random.randn(self.nbParCoucheInter, self.nbParCoucheInter))
-            self.biais.append(np.random.randn(self.nbParCoucheInter, 1))
-        self.poids.append(np.random.randn(self.resultats, self.nbParCoucheInter))
-        self.biais.append(np.random.randn(self.resultats, 1))
+            pass
+        #Initialisation des matrices poids et biais de manière aléatoire
+        self.poids.append(createRandomMatrice(self.nbParCoucheInter, self.activations))
+        self.biais.append(createRandomMatrice(self.activations, 1))
+        for i in range(1, self.COUCHE_TOTAL-1):
+            self.biais.append(createRandomMatrice(self.nbParCoucheInter, 1))
+        for i in range(1, self.COUCHE_TOTAL-2):
+            self.poids.append(createRandomMatrice(self.nbParCoucheInter, self.nbParCoucheInter))
+        self.poids.append(createRandomMatrice(self.resultats, self.nbParCoucheInter))
+        self.biais.append(createRandomMatrice(self.resultats, 1))
     
     def setTrainingData(self, X, Y):
-        self.X = X
-        self.Y = Y
+        self.TrainingX = X
+        self.TrainingY = Y
 
     def calculateNextLayer(self, layer, X):
-        produit = np.dot(self.poids[layer], X)
+        produit = X
+        if(layer < len(self.poids)):
+            produit = self.poids[layer].multiply(X)
         somme = produit
         if layer < self.COUCHE_TOTAL-1:
-            somme = np.add(produit, self.biais[layer+1])
+            somme = produit.add(self.biais[layer+1])
         somme = self.sigmoid(somme)
         return somme
 
@@ -54,7 +63,7 @@ class Reseau:
     
     def printPoids(self):
         print("Poids d'activation: \n" + str(self.poids[0]) + '\n')
-        for i in range(1, self.couchesIntermediaire+1):
+        for i in range(1, self.couchesIntermediaire):
             print("Poids de couche intermédiaire {}: \n".format(i) + str(self.poids[i]) + '\n')
         print("Poids de couche de sortie: \n" + str(self.poids[len(self.poids)-1]) )
 
@@ -64,14 +73,6 @@ class Reseau:
             print("Biais de couche intermédiaire {}: \n".format(i) + str(self.biais[i]) + '\n')
         print("Biais de couche de sortie: \n" + str(self.biais[len(self.biais)-1]))
 
-
-    def subtractMatrice(self, A, B):
-        n = 0
-        result = []
-        for cell in A.flatten():
-            result.append(cell - B[n])
-        return result
-
     def guess(self, X):
         for i in range(0, self.COUCHE_TOTAL):
             X = self.sigmoid(self.calculateNextLayer(i, X))
@@ -80,27 +81,25 @@ class Reseau:
     def sigmoid(self, X):
         #f(x)=1/1+e-x
         s = lambda x : 1 / (1+math.exp(-x))
-        sV = np.vectorize(s)
-        return sV(X)
+        X.applyFunc(s)
+        return X
     
-    def cost(self, X, Y):
+    def cost(self, X, Y, verbose = False):
         guessed = self.guess(X)
-        print("guessed: " + str(guessed))
-        print("Y: " + str(Y))
-        ecart = self.subtractMatrice(guessed, Y)
-        print("ecart: " + str(ecart))
-        squareMatrice = np.vectorize(lambda x : x**2)
-        ecartSquared = squareMatrice(ecart)
+        ecart = guessed.add(Y.multiplyByReal(-1))
+        if(verbose):
+            print("Guessed: ", guessed)
+        ecartSquared = ecart.applyFunc(lambda x : x**2)
         return ecartSquared.sum()
 
 def main():
     reseau = Reseau(3, 2, 2, 1)
     reseau.show()
-    reseau.setTrainingData([[0.4],[0.32],[0.876]],[[0,3333]])
-    print(reseau.cost([[0.4],[0.32],[0.876]],[[0,3333]]))
-    matriceA = Matrice(2,2,[1,2,3,4])
-    matriceB = Matrice(2, 1, [5,6])
-    print(matriceA.multiply(matriceB))
+    print("\n")
+    matriceA = Matrice(3,1,[0.4,0.32,0.876])
+    matriceR = Matrice(1,1, [0.9])
+    reseau.setTrainingData([matriceA], [matriceR])
+    print("cout:", reseau.cost(matriceA, matriceR, True))
 
 if __name__ == "__main__":
     main()
