@@ -49,6 +49,11 @@ class Matrice:
             self.valeurs[i] *= k
         return self
 
+    def addReal(self, k):
+        for i in range(0, len(self.valeurs)):
+            self.valeurs[i] += k
+        return self
+
     def sum(self):
         sum = 0
         for i in range(0, len(self.valeurs)):
@@ -84,7 +89,9 @@ class Matrice:
         return self.lignes
     def getColones(self):
         return self.colones
-
+    def getValList(self):
+        return self.valeurs
+        
     def __str__(self) -> str:
         return "Lignes: {} Colonnes {} Valeurs: ".format(self.lignes, self.colones) + str(self.valeurs)
 
@@ -101,5 +108,4 @@ def createRandomMatrice(lignes, colones):
     valeurs = []
     for i in range(0, lignes * colones):
         valeurs.append(random.random())
-        #valeurs.append(1)
     return Matrice(lignes, colones, valeurs)

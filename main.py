@@ -1,7 +1,10 @@
+from audioop import add
 from venv import create
 import matplotlib.pyplot as plt
 from matrice import *
 import math
+
+__H__ = 10
 
 class Reseau:
     def __init__(self, activations, couchesIntermediaire, nbParCoucheInter, resultats):
@@ -30,7 +33,7 @@ class Reseau:
             pass
         #Initialisation des matrices poids et biais de manière aléatoire
         self.poids.append(createRandomMatrice(self.nbParCoucheInter, self.activations))
-        self.biais.append(createRandomMatrice(self.activations, 1))
+        self.biais.append(createMatriceOfK(self.activations, 1, 0))
         for i in range(1, self.COUCHE_TOTAL-1):
             self.biais.append(createRandomMatrice(self.nbParCoucheInter, 1))
         for i in range(1, self.COUCHE_TOTAL-2):
@@ -74,8 +77,11 @@ class Reseau:
         print("Biais de couche de sortie: \n" + str(self.biais[len(self.biais)-1]))
 
     def guess(self, X):
+        self.layer = []
+        self.layer.append(X)
         for i in range(0, self.COUCHE_TOTAL):
             X = self.sigmoid(self.calculateNextLayer(i, X))
+            self.layer.append(X)
         return X
 
     def sigmoid(self, X):
@@ -84,6 +90,15 @@ class Reseau:
         X.applyFunc(s)
         return X
     
+    def costTotal(self, verbose=False):
+        if self.TrainingX == [] or self.TrainingY == []:
+            print("Warning: Aucune donnée d'entrainement")
+            return 0
+        costTotal = 0
+        for i in range(0, len(self.TrainingX)):
+            costTotal += self.cost(self.TrainingX[i], self.TrainingY[i], verbose)
+        return costTotal/len(self.TrainingX)
+
     def cost(self, X, Y, verbose = False):
         guessed = self.guess(X)
         ecart = guessed.add(Y.multiplyByReal(-1))
@@ -91,15 +106,95 @@ class Reseau:
             print("Guessed: ", guessed)
         ecartSquared = ecart.applyFunc(lambda x : x**2)
         return ecartSquared.sum()
+    
+    def reseauToList(self):
+        liste = []
+        for i in range(0, len(self.poids)):
+            for j in range(0, self.poids[i].lignes * self.poids[i].colones):
+                liste.append(self.poids[i].valeurs[j])
+            if i < len(self.poids):
+                for k in range(0, self.biais[i+1].lignes * self.biais[i].colones):
+                    liste.append(self.biais[i+1].valeurs[k])
+        return liste
+
+    def registerList(self, liste):
+        self.poids = []
+        self.biais = []
+        n = 0
+
+        self.biais.append(createMatriceOfK(self.activations, 1, 0))
+
+        self.poids.append(Matrice(self.nbParCoucheInter, self.activations, liste[n:n+self.nbParCoucheInter*self.activations]))
+        n+=self.nbParCoucheInter*self.activations
+        self.biais.append(Matrice(self.nbParCoucheInter, 1, liste[n:n+self.nbParCoucheInter]))
+        n+=self.nbParCoucheInter
+
+        if(self.nbParCoucheInter > 1):
+            for i in range(0,self.nbParCoucheInter-1):
+                self.poids.append(Matrice(self.nbParCoucheInter, self.nbParCoucheInter, liste[n:n+self.nbParCoucheInter*self.nbParCoucheInter]))
+                n+=self.nbParCoucheInter*self.nbParCoucheInter 
+                self.biais.append(Matrice(self.nbParCoucheInter, 1, liste[n:n+self.nbParCoucheInter]))
+                n+=self.nbParCoucheInter
+        self.poids.append(Matrice(self.resultats, self.nbParCoucheInter, liste[n:n+self.resultats*self.nbParCoucheInter]))
+        n+=self.resultats*self.nbParCoucheInter
+        self.biais.append(Matrice(self.resultats, 1, liste[n:n+self.resultats]))
+        n+=self.resultats
+
+    def addHInReseau(self, index, h = __H__):
+        liste = self.reseauToList()
+        liste[index] += h
+        self.registerList(liste)
+
+    def calculateDerivate(self, index):
+        reseauIntoListSave = list(self.reseauToList())
+        self.addHInReseau(index)
+        costWithH = self.costTotal()
+        self.registerList(reseauIntoListSave)
+        cost = self.costTotal()
+        return (costWithH-cost)/__H__
+    
+    def getNbOfPoidsbiais(self):
+        nbOfPoids = 0
+        nbOfBiais = 0
+        for poid in self.poids:
+            nbOfPoids += poid.getLines() * poid.getColones()
+        for i in range(1, len(self.biais)):
+            nbOfBiais += self.biais[i].getLines() * self.biais[i].getColones()
+        return nbOfPoids + nbOfBiais
+
+    def createGradient(self):
+        gradientVal = []
+        gradient = Matrice(self.getNbOfPoidsbiais(), 1, gradientVal)
+        for i in range(0, self.getNbOfPoidsbiais()):
+            derivate = self.calculateDerivate(i)
+            gradientVal.append(-derivate) #inverse de la dérivée
+        self.show()
+        return gradient
+        
+    def train(self, nbIteration, step):
+        for i in range(0, nbIteration):
+            matriceParam = Matrice(1, self.getNbOfPoidsbiais(), [])
+            matriceParam.valeurs = self.reseauToList()
+            gradient = self.createGradient()
+            gradient = gradient.multiplyByReal(step)
+            matriceParam.multiply(gradient)
+            self.registerList(matriceParam.valeurs)
+            print("Iteration {}: Cout {}".format(i, self.costTotal()))        
 
 def main():
+    print("Hello world!")
     reseau = Reseau(3, 2, 2, 1)
     reseau.show()
     print("\n")
     matriceA = Matrice(3,1,[0.4,0.32,0.876])
-    matriceR = Matrice(1,1, [0.9])
-    reseau.setTrainingData([matriceA], [matriceR])
-    print("cout:", reseau.cost(matriceA, matriceR, True))
-
+    matriceB = Matrice(3,1, [0.7,0.5,0.9,.0])
+    matriceR = Matrice(1,1, [0.333])
+    matriceR2 = Matrice(1,1, [0.999])
+    reseau.setTrainingData([matriceA, matriceB], [matriceR, matriceR2])
+    print("cout avant: ", reseau.costTotal(True))
+    #reseau.train(1, 0.1)
+    print("cout après: ", reseau.costTotal(True))
+    grad = reseau.createGradient()
+    print("Gradient: ", grad)
 if __name__ == "__main__":
     main()
