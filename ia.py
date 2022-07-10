@@ -114,7 +114,7 @@ class Reseau:
                     liste.append(self.biais[i+1].valeurs[k])
         return liste
 
-    def registerList(self, liste): #TODO ERREUR ICI !
+    def registerList(self, liste):
         self.poids = []
         self.biais = []
         n = 0
@@ -174,11 +174,11 @@ class Reseau:
             LR.append(LA[i] + LB[i])
         return LR
         
-    def train(self, nbIteration, step, verbose = False):
+    def train(self, nbIteration, step, verbose = False, verboseStep = 1):
         for i in range(0, nbIteration):
             reseauToList = list(self.reseauToList())
             gradient = self.createInverseGradient()
             gradient = gradient.multiplyByReal(step)
             self.registerList(self.addTwoList(reseauToList, gradient.valeurs))
-            if verbose:
+            if verbose and i%verboseStep==0 :
                 print("Iteration {}: Cout {}".format(i, self.costTotal()))        
