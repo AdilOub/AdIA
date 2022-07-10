@@ -44,6 +44,9 @@ class Matrice:
             resultat[i] = self.valeurs[i] + B.getValueByIndex(i)
         return matriceResultat
     
+    def clone(self):
+        return Matrice(self.lignes, self.colones, list(self.valeurs))
+
     def multiplyByReal(self, k):
         for i in range(0, len(self.valeurs)):
             self.valeurs[i] *= k
