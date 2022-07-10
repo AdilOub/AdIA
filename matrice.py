@@ -1,3 +1,4 @@
+from msilib.schema import Error
 import random
 from venv import create
 
@@ -29,7 +30,13 @@ class Matrice:
             for i in range(0, B.getColones()):
                 sum = 0
                 for j in range(0, self.colones):
-                    sum += self.valeurs[j+h*self.colones] * B.getValue(i, j)
+                    try:
+                        sum += self.valeurs[j+h*self.colones] * B.getValue(i, j)
+                    except IndexError:
+                        print("\n\nIndex error !")
+                        print("B: " + str(B))
+                        print("self: " + str(self))
+                        raise IndexError
                 matriceResultat.setValue(sum, i, h)           
         return matriceResultat
 

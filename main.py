@@ -8,7 +8,7 @@ def helper(listeDeDonne):
 
 def main():
     print("Hello world!")
-    reseau = Reseau(3, 2, 2, 1)
+    reseau = Reseau(3, 8, 8, 1)
     reseau.show()
     print("\n")
     matriceA = Matrice(3,1,[0.4,0.32,0.876])
@@ -18,7 +18,7 @@ def main():
     reseau.setTrainingData([matriceA, matriceB], [matriceR, matriceR2])
     costBefore = reseau.costTotal()
     print("cout avant: ", costBefore)
-    reseau.train(10000, 0.25)
+    reseau.train(1000, 0.2)
     print("cout après: ", reseau.costTotal()," avant: ", costBefore)
 if __name__ == "__main__":
     main()

@@ -31,7 +31,9 @@ class Reseau:
         #Initialisation des matrices couches
         self.layer.append(createMatriceOfK(activations, 1, 0))
         for i in range(1, self.COUCHE_TOTAL-1):
-            pass
+            self.layer.append(createMatriceOfK(couchesIntermediaire, 1, 0))
+        self.layer.append(createMatriceOfK(resultats, 1, 0))
+
         #Initialisation des matrices poids et biais de manière aléatoire
         self.poids.append(createRandomMatrice(self.nbParCoucheInter, self.activations))
         self.biais.append(createMatriceOfK(self.activations, 1, 0))
@@ -41,10 +43,6 @@ class Reseau:
             self.poids.append(createRandomMatrice(self.nbParCoucheInter, self.nbParCoucheInter))
         self.poids.append(createRandomMatrice(self.resultats, self.nbParCoucheInter))
         self.biais.append(createRandomMatrice(self.resultats, 1))
-
-        #Initialisation des couches de neuronnes:
-        for i in range(0, self.COUCHE_TOTAL):
-            self.layer.append(0)
     
     def setTrainingData(self, X, Y):
         self.TrainingX = X
@@ -116,7 +114,7 @@ class Reseau:
                     liste.append(self.biais[i+1].valeurs[k])
         return liste
 
-    def registerList(self, liste):
+    def registerList(self, liste): #TODO ERREUR ICI !
         self.poids = []
         self.biais = []
         n = 0
@@ -128,12 +126,11 @@ class Reseau:
         self.biais.append(Matrice(self.nbParCoucheInter, 1, liste[n:n+self.nbParCoucheInter]))
         n+=self.nbParCoucheInter
 
-        if(self.nbParCoucheInter > 1):
-            for i in range(0,self.nbParCoucheInter-1):
-                self.poids.append(Matrice(self.nbParCoucheInter, self.nbParCoucheInter, liste[n:n+self.nbParCoucheInter*self.nbParCoucheInter]))
-                n+=self.nbParCoucheInter*self.nbParCoucheInter 
-                self.biais.append(Matrice(self.nbParCoucheInter, 1, liste[n:n+self.nbParCoucheInter]))
-                n+=self.nbParCoucheInter
+        for i in range(0,self.couchesIntermediaire-1):
+            self.poids.append(Matrice(self.nbParCoucheInter, self.nbParCoucheInter, liste[n:n+self.nbParCoucheInter*self.nbParCoucheInter]))
+            n+=self.nbParCoucheInter*self.nbParCoucheInter 
+            self.biais.append(Matrice(self.nbParCoucheInter, 1, liste[n:n+self.nbParCoucheInter]))
+            n+=self.nbParCoucheInter
         self.poids.append(Matrice(self.resultats, self.nbParCoucheInter, liste[n:n+self.resultats*self.nbParCoucheInter]))
         n+=self.resultats*self.nbParCoucheInter
         self.biais.append(Matrice(self.resultats, 1, liste[n:n+self.resultats]))
