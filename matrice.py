@@ -23,7 +23,7 @@ class Matrice:
         if not isinstance(B, Matrice):
             raise Exception("Erreur: impossible de multiplier avec un objet non matrice")
         if self.colones != B.getLines():
-            raise Exception("Erreur: Les deux matrices ne peuvent pas être multipliées.")
+            raise Exception("Erreur: Les deux matrices ne peuvent pas être multipliées. (format de self L{} C{} format de B: L{} C{} ".format(self.lignes, self.colones, B.lignes, B.colones))
         resultat = self.initList(self.lignes * B.getColones())
         matriceResultat = Matrice(self.lignes, B.getColones(), resultat)
         for h in range(0, self.lignes):

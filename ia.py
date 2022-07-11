@@ -1,5 +1,6 @@
 from audioop import add
 from ensurepip import version
+from this import d
 from venv import create
 import matplotlib.pyplot as plt
 from matrice import *
@@ -49,14 +50,17 @@ class Reseau:
         self.TrainingY = Y
 
     def show(self):
-        print("Couche d'activation: " + str(self.activations))
-        print("Couches intermédiaires: " + str(self.couchesIntermediaire))
-        print("Couches de sortie: " + str(self.resultats))
+        self.describe()
         print("-----------------------------------------------------")
         self.printPoids()
         print("-----------------------------------------------------")
         self.printBiais()
     
+    def describe(self):
+        print("Couche d'activation: " + str(self.activations))
+        print("Couches intermédiaires: " + str(self.couchesIntermediaire))
+        print("Couches de sortie: " + str(self.resultats))
+
     def printPoids(self):
         print("Poids d'activation: \n" + str(self.poids[0]) + '\n')
         for i in range(1, self.couchesIntermediaire):
@@ -102,7 +106,7 @@ class Reseau:
         if(verbose):
             print("Guessed: ", guessed)
         ecartSquared = ecart.applyFunc(lambda x : x**2)
-        return ecartSquared.sum()
+        return ecartSquared.sum()/len(ecartSquared.valeurs)
     
     def reseauToList(self):
         liste = []
